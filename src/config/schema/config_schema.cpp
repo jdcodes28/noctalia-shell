@@ -765,6 +765,7 @@ namespace noctalia::config::schema {
                 tbl.insert_or_assign("order", std::string(enumToKey(kWallpaperAutomationOrders, in.order)));
               }
           ),
+          field(&WallpaperAutomationConfig::randomWithoutReplacement, "random_without_replacement"),
           field(&WallpaperAutomationConfig::recursive, "recursive"),
       };
       return s;

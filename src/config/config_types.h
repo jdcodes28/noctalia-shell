@@ -490,6 +490,7 @@ struct WallpaperAutomationConfig {
   bool enabled = false;
   std::int32_t intervalSeconds = 1800;
   Order order = Order::Random;
+  bool randomWithoutReplacement = false;
   bool recursive = true;
 
   bool operator==(const WallpaperAutomationConfig&) const = default;

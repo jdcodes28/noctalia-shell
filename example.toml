@@ -123,6 +123,7 @@ path = ""                            # optional initial/default wallpaper path
 enabled                    = false
 interval_seconds           = 1800    # seconds between changes
 order                      = "random" # random | alphabetical
+random_without_replacement = false    # show every wallpaper once before repeating; progress persists across restarts
 recursive                  = true    # include subdirectories when picking random wallpapers
 
 # ── Theme ─────────────────────────────────────────────────────────────────────

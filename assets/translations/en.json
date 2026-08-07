@@ -3053,6 +3053,10 @@
           "description": "Pick wallpapers randomly or alphabetically",
           "label": "Order"
         },
+        "automation-random-without-replacement": {
+          "description": "Show every wallpaper once before any is chosen again; shuffle progress is saved across restarts",
+          "label": "Avoid Random Repeats"
+        },
         "automation-recursive": {
           "description": "Search nested folders for wallpapers",
           "label": "Include Subfolders"

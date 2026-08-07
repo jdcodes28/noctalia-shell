@@ -796,6 +796,15 @@ namespace settings {
         tr("settings.schema.wallpaper.automation-order.description"), {"wallpaper", "automation", "order"},
         asSegmented(enumSelect(kWallpaperAutomationOrders, cfg.wallpaper.automation.order)), "rotate slideshow"
     ));
+    if (cfg.wallpaper.automation.order == WallpaperAutomationConfig::Order::Random) {
+      entries.push_back(makeEntry(
+          SettingsSection::Wallpaper, "automation",
+          tr("settings.schema.wallpaper.automation-random-without-replacement.label"),
+          tr("settings.schema.wallpaper.automation-random-without-replacement.description"),
+          {"wallpaper", "automation", "random_without_replacement"},
+          ToggleSetting{cfg.wallpaper.automation.randomWithoutReplacement}, "shuffle no repeats slideshow"
+      ));
+    }
     entries.push_back(makeEntry(
         SettingsSection::Wallpaper, "automation", tr("settings.schema.wallpaper.automation-recursive.label"),
         tr("settings.schema.wallpaper.automation-recursive.description"), {"wallpaper", "automation", "recursive"},

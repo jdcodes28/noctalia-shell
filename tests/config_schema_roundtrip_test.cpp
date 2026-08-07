@@ -461,6 +461,7 @@ location = "https://example.invalid/bad"
     c.wallpaper.automation.enabled = true;
     c.wallpaper.automation.intervalSeconds = 30;
     c.wallpaper.automation.order = WallpaperAutomationConfig::Order::Alphabetical;
+    c.wallpaper.automation.randomWithoutReplacement = true;
     c.wallpaper.monitorOverrides = {
         {"DP-1", true, colorSpecFromConfigString("#00ff00"), std::string("/srv/wp1"), std::nullopt, std::nullopt},
     };
