@@ -49,10 +49,6 @@ namespace {
 
   [[nodiscard]] Color defaultWallpaperColor() { return rgba(0.0F, 0.0F, 0.0F, 1.0F); }
 
-  [[nodiscard]] float transitionProgressForTime(float time) {
-    return applyEasing(kWallpaperTransitionEasing, std::clamp(time, 0.0F, 1.0F));
-  }
-
   void setTransitionTime(WallpaperInstance& instance, float time) {
     instance.transitionTime = std::clamp(time, 0.0F, 1.0F);
   }
@@ -376,6 +372,25 @@ namespace {
   }
 
 } // namespace
+
+std::optional<wallpaper::TransitionSelection>
+wallpaper::selectTransition(const WallpaperConfig& config, float aspectRatio) {
+  if (config.transitions.empty()) {
+    return std::nullopt;
+  }
+
+  const auto& transitions = config.transitions;
+  const auto type =
+      transitions[static_cast<std::size_t>(std::floor(randomFloat(0.0F, static_cast<float>(transitions.size()))))];
+  return TransitionSelection{
+      .type = type,
+      .params = randomizeParams(type, config.edgeSmoothness, aspectRatio),
+  };
+}
+
+float wallpaper::transitionProgress(float time) {
+  return applyEasing(kWallpaperTransitionEasing, std::clamp(time, 0.0F, 1.0F));
+}
 
 Wallpaper::Wallpaper() {
   const std::string stateDir = FileUtils::stateDir();
@@ -947,10 +962,6 @@ void Wallpaper::resetAutomationState() {
   m_lastAutomationSwitchSecond = -1;
 }
 
-void Wallpaper::setAutomationGate(std::function<bool()> gate) { m_automationGate = std::move(gate); }
-
-bool Wallpaper::automationAllowed() const noexcept { return !m_automationGate || m_automationGate(); }
-
 ThemeMode Wallpaper::directoryThemeMode() const noexcept {
   const ThemeMode configured = m_config != nullptr ? m_config->config().theme.mode : ThemeMode::Dark;
   const bool isLight = m_themeService != nullptr ? m_themeService->isLightMode() : configured == ThemeMode::Light;
@@ -978,7 +989,7 @@ std::string Wallpaper::pickAutomationWallpaperPath(
 void Wallpaper::applyStartupAutomation(std::int64_t secondStamp) {
   const auto& wallpaper = m_config->config().wallpaper;
   const auto& automation = wallpaper.automation;
-  if (!automation.enabled || m_wayland == nullptr || !automationAllowed()) {
+  if (!automation.enabled || m_wayland == nullptr) {
     return;
   }
 
@@ -1079,7 +1090,7 @@ void Wallpaper::applyStartupAutomation(std::int64_t secondStamp) {
 void Wallpaper::runAutomation(std::int64_t secondStamp) {
   const auto& wallpaper = m_config->config().wallpaper;
   const auto& automation = wallpaper.automation;
-  if (!automation.enabled || m_instances.empty() || !automationAllowed()) {
+  if (!automation.enabled || m_instances.empty()) {
     return;
   }
 
@@ -1489,11 +1500,9 @@ void Wallpaper::startTransition(WallpaperInstance& instance) {
     aspectRatio = static_cast<float>(instance.surface->width()) / static_cast<float>(instance.surface->height());
   }
 
-  const auto& transitions = wpConfig.transitions;
-  const auto picked =
-      transitions[static_cast<std::size_t>(std::floor(randomFloat(0.0F, static_cast<float>(transitions.size()))))];
-  instance.activeTransition = picked;
-  instance.transitionParams = randomizeParams(picked, wpConfig.edgeSmoothness, aspectRatio);
+  const auto selected = wallpaper::selectTransition(wpConfig, aspectRatio);
+  instance.activeTransition = selected->type;
+  instance.transitionParams = selected->params;
   startTransitionAnimation(instance, 0.0F, WallpaperTransitionDirection::Forward);
 }
 
@@ -1609,7 +1618,7 @@ void Wallpaper::updateRendererState(WallpaperInstance& instance) {
       static_cast<float>(instance.nextTexture.height)
   );
   wallpaperNode->setTransition(
-      instance.activeTransition, transitionProgressForTime(instance.transitionTime), instance.transitionParams
+      instance.activeTransition, wallpaper::transitionProgress(instance.transitionTime), instance.transitionParams
   );
   wallpaperNode->setFillMode(wpConfig.fillMode);
   wallpaperNode->setFillColor(fillColor);

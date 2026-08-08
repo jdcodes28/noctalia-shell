@@ -6,6 +6,7 @@
 #include "render/core/blur_cache.h"
 #include "render/core/color.h"
 #include "render/core/texture_manager.h"
+#include "render/core/wallpaper_types.h"
 #include "render/scene/input_dispatcher.h"
 #include "render/scene/node.h"
 #include "shell/lockscreen/lockscreen_login_box.h"
@@ -101,10 +102,23 @@ private:
     Label* temps = nullptr;
   };
 
+  struct WallpaperVisual {
+    WallpaperSourceKind sourceKind = WallpaperSourceKind::Image;
+    TextureHandle sourceTexture{};
+    TextureHandle displayTexture{};
+    Color color = rgba(0.0F, 0.0F, 0.0F, 1.0F);
+    std::string path;
+  };
+
   void prepareFrame(bool needsUpdate, bool needsLayout);
   void applyWallpaperTexture();
+  bool loadWallpaperVisual(std::size_t index, const std::string& path);
+  bool refreshWallpaperVisual(std::size_t index);
+  void releaseWallpaperVisual(std::size_t index);
+  void showCurrentWallpaperVisual();
+  void startWallpaperTransition(std::size_t nextIndex);
+  void finishWallpaperTransition();
   void applyBlurredDesktopTexture();
-  void releaseWallpaperTextureRef(const std::string& path);
   void releaseCaptureTextures();
   void layoutScene(std::uint32_t width, std::uint32_t height);
   void updateCopy();
@@ -154,12 +168,14 @@ private:
   Flex* m_sessionRow = nullptr;
   std::vector<Button*> m_sessionButtons;
   SharedTextureCache* m_textureCache = nullptr;
-  TextureHandle m_wallpaperTexture{};
-  TextureHandle m_blurredWallpaperTexture{};
+  std::array<WallpaperVisual, 2> m_wallpaperVisuals;
+  std::array<BlurCache, 2> m_wallpaperBlurCaches;
+  std::size_t m_currentWallpaperVisual = 0;
+  std::optional<std::size_t> m_pendingWallpaperVisual;
+  AnimationManager::Id m_wallpaperTransitionAnimId = 0;
   TextureHandle m_captureSourceTexture{};
   TextureHandle m_blurredDesktopTexture{};
   BlurCache m_blurCache;
-  BlurCache m_wallpaperBlurCache;
   std::optional<ScreencopyImage> m_desktopCapture;
   float m_blurIntensity = 0.5F;
   float m_tintIntensity = 0.3F;
@@ -167,7 +183,7 @@ private:
   bool m_blackout = false;
   bool m_captureDirty = true;
   std::string m_wallpaperPath;
-  std::string m_textureWallpaperPath;
+  bool m_wallpaperStyleDirty = false;
   WallpaperFillMode m_wallpaperFillMode = WallpaperFillMode::Crop;
   Color m_wallpaperFillColor = rgba(0.0F, 0.0F, 0.0F, 0.0F);
   bool m_wallpaperDirty = false;

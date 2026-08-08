@@ -1,12 +1,13 @@
 #pragma once
 
 #include "config/config_types.h"
+#include "render/core/wallpaper_types.h"
 #include "shell/wallpaper/wallpaper_shuffle_state.h"
 #include "ui/signal.h"
 
 #include <cstdint>
-#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -33,6 +34,16 @@ struct WallpaperChange {
   std::string connector;
 };
 
+namespace wallpaper {
+  struct TransitionSelection {
+    WallpaperTransition type = WallpaperTransition::Fade;
+    TransitionParams params;
+  };
+
+  [[nodiscard]] std::optional<TransitionSelection> selectTransition(const WallpaperConfig& config, float aspectRatio);
+  [[nodiscard]] float transitionProgress(float time);
+} // namespace wallpaper
+
 class Wallpaper {
 public:
   Wallpaper();
@@ -55,7 +66,6 @@ public:
   // outputs plus the default. Returns false if the path does not exist or the
   // connector is unknown. Shared by the wallpaper-set IPC handler and plugin scripts.
   bool applyWallpaperImage(const std::optional<std::string>& connector, const std::string& path);
-  void setAutomationGate(std::function<bool()> gate);
   [[nodiscard]] bool ownsSurface(wl_surface* surface) const noexcept;
   bool onPointerEvent(const PointerEvent& event);
 
@@ -95,7 +105,6 @@ private:
   void applyStartupAutomation(std::int64_t secondStamp);
   void resetAutomationState();
   void runAutomation(std::int64_t secondStamp);
-  [[nodiscard]] bool automationAllowed() const noexcept;
   [[nodiscard]] SwitchOutcome
   switchWallpaperTo(PickWallpaper action, std::optional<std::string_view> connector = std::nullopt);
   [[nodiscard]] ThemeMode directoryThemeMode() const noexcept;
