@@ -34,6 +34,7 @@ public:
 
   static void expectResults(const LauncherPanel& panel, const std::vector<std::string_view>& ids) {
     std::vector<std::string_view> actual;
+    actual.reserve(panel.m_results.size());
     for (const auto& result : panel.m_results) {
       actual.push_back(result.id);
     }
